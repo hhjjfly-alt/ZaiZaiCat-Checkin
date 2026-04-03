@@ -238,7 +238,7 @@ class SmzdmTaskManager:
             # 领取任务奖励
             logger.info(f"💰 检查并领取众测任务奖励...")
             self.claim_task_rewards(api, activity_id)
-# ==================== 新增：自定义文章每天增减 ====================
+# ==================== 自定义文章每日增减闭环 ====================
             custom_article_id = None
             if hasattr(api, 'setting') and api.setting:
                 try:
@@ -249,16 +249,12 @@ class SmzdmTaskManager:
                     pass
 
             if custom_article_id:
-                logger.info(f"🎯 开始执行自定义文章每日增减: {custom_article_id}")
+                logger.info(f"🎯 任务已全部完成，开始清理收藏状态以备明日: {custom_article_id}")
                 if api.unfavorite_article_simple(custom_article_id):
-                    time.sleep(2)
-                    if api.favorite_article_simple(custom_article_id):
-                        logger.info(f"✅ 自定义文章 {custom_article_id} 已完成每日增减循环")
-                    else:
-                        logger.error("❌ 重新收藏失败")
+                    logger.info(f"✅ 自定义文章 {custom_article_id} 已取消收藏，每日增减循环完美闭环！")
                 else:
-                    logger.error("❌ 取消收藏失败")
-            # ==================== 新增结束 ====================
+                    logger.error("❌ 取消收藏失败，请检查接口状态")
+            # ==================== 结束 ====================
             return {'success': success_count, 'fail': fail_count, 'skip': skip_count}
 
         except Exception as e:
