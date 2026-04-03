@@ -397,7 +397,27 @@ class SmzdmTaskManager:
             # 重新获取任务列表并领取奖励
             logger.info(f"💰 重新获取互动任务状态并领取奖励...")
             self.claim_interactive_task_rewards(api, service)
+# ==================== 新增：自定义文章每天增减 ====================
+            custom_article_id = None
+            if hasattr(api, 'setting') and api.setting:
+                try:
+                    import json
+                    setting_dict = json.loads(api.setting)
+                    custom_article_id = setting_dict.get('custom_favorite_article_id')
+                except:
+                    pass
 
+            if custom_article_id:
+                logger.info(f"🎯 开始执行自定义文章每日增减: {custom_article_id}")
+                if api.unfavorite_article_simple(custom_article_id):
+                    time.sleep(2)
+                    if api.favorite_article_simple(custom_article_id):
+                        logger.info(f"✅ 自定义文章 {custom_article_id} 已完成每日增减循环")
+                    else:
+                        logger.error("❌ 重新收藏失败")
+                else:
+                    logger.error("❌ 取消收藏失败")
+            # ==================== 新增结束 ====================
             return {'success': success_count, 'fail': fail_count, 'skip': skip_count}
 
         except Exception as e:
