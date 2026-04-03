@@ -1986,8 +1986,7 @@ class SmzdmAPI:
             logger.error(f"❌ 领取爆料阶段性奖励请求失败: {str(e)}")
             return False
 
-
-   def favorite_article_simple(self, article_id: str) -> bool:
+    def favorite_article_simple(self, article_id: str) -> bool:
         """简单收藏文章（绕过 preload 接口错误）"""
         url = f"{self.BASE_URL}/user/favorite/ajax_add_favorite"
         params = {"article_id": article_id, "type": "article"}
