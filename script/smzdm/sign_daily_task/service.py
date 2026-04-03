@@ -127,27 +127,26 @@ class SmzdmService:
 
             return self.api.view_article_task(task_id, article_id, channel_id, task_event_type)
 
-        elif task_event_type == "interactive.favorite":
-            # 收藏文章任务
-            redirect_url = task.get('task_redirect_url', {})
-            article_link_val = redirect_url.get('link_val', '')
-
-            if not article_link_val:
-                logger.warning(f"任务 [{task_name}] 缺少文章ID,跳过")
+       elif task_event_type == "interactive.favorite":
+            custom_article_id = None
+            if hasattr(self.api, 'setting') and self.api.setting:
+                try:
+                    import json
+                    setting_dict = json.loads(self.api.setting)
+                    custom_article_id = setting_dict.get('custom_favorite_article_id')
+                except:
+                    pass
+            
+            if custom_article_id:
+                logger.info(f"✅ 使用 config 自定义文章ID 进行收藏: {custom_article_id}")
+                return self.api.favorite_article_simple(custom_article_id)
+            else:
+                logger.warning("未配置自定义文章ID，跳过自带的错误收藏任务")
                 return False
-
-            return self.api.favorite_article_task(task_id, article_link_val)
 
         elif task_event_type == "interactive.rating":
-            # 点赞文章任务
-            redirect_url = task.get('task_redirect_url', {})
-            article_link_val = redirect_url.get('link_val', '')
-
-            if not article_link_val:
-                logger.warning(f"任务 [{task_name}] 缺少文章ID,跳过")
-                return False
-
-            return self.api.rating_article_task(task_id, article_link_val)
+            logger.info(f"跳过点赞任务（使用自定义收藏即可）")
+            return True 
 
         elif task_event_type == "guide.apply_zhongce":
             # 申请众测任务
