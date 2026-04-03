@@ -124,10 +124,9 @@ class SmzdmService:
         # 根据任务类型执行不同的操作
         if task_event_type == "interactive.view.article":
             # 浏览文章任务
-
             return self.api.view_article_task(task_id, article_id, channel_id, task_event_type)
 
-       elif task_event_type == "interactive.favorite":
+        elif task_event_type == "interactive.favorite":
             custom_article_id = None
             if hasattr(self.api, 'setting') and self.api.setting:
                 try:
