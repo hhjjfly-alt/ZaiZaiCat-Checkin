@@ -2030,7 +2030,8 @@ class SmzdmAPI:
 
     def unfavorite_article_simple(self, article_id: str) -> bool:
         """简单取消收藏文章（使用官方App接口）"""
-        url = f"{self.USER_API_URL}/favorites/delete"
+        # 👇 只有这里改了，把 delete 改成了 destroy
+        url = f"{self.USER_API_URL}/favorites/destroy" 
         token = self._get_token_from_cookie()
         current_time = int(time.time() * 1000)
         
