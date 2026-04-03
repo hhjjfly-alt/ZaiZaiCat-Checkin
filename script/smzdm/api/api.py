@@ -1987,28 +1987,88 @@ class SmzdmAPI:
             return False
 
     def favorite_article_simple(self, article_id: str) -> bool:
-        """简单收藏文章（绕过 preload 接口错误）"""
-        url = f"{self.BASE_URL}/user/favorite/ajax_add_favorite"
-        params = {"article_id": article_id, "type": "article"}
-        logger.info(f"正在使用简单方式收藏文章 {article_id}...")
-        data = self._make_request('GET', url, params=params)
-        if data and str(data.get('error_code', '')) in ['0', None, '']:
-            logger.info(f"✅ 收藏成功: {article_id}")
-            return True
-        logger.error(f"❌ 收藏失败: {article_id} - {data}")
-        return False
+        """简单收藏文章（使用官方App接口，强制 channel_id=3 绕过文章不存在报错）"""
+        url = f"{self.USER_API_URL}/favorites/create"
+        token = self._get_token_from_cookie()
+        current_time = int(time.time() * 1000)
+        
+        params = {
+            'basic_v': '0',
+            'channel_id': '3',  # 强制指定频道，绕过 preload 预加载失败
+            'f': 'iphone',
+            'id': article_id,
+            'time': str(current_time),
+            'token': token,
+            'v': '11.1.35',
+            'weixin': '1',
+            'zhuanzai_ab': 'b'
+        }
+        params['sign'] = calculate_sign_from_params(params)
+        
+        headers = self.session.headers.copy()
+        headers.update({
+            'User-Agent': self.user_agent,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'request_key': str(int(time.time() * 1000000000))[:18],
+            'Content-Encoding': 'gzip',
+            'Accept-Language': 'zh-Hans-CN;q=1'
+        })
+
+        logger.info(f"正在使用官方API收藏文章 {article_id}...")
+        try:
+            response = self.session.post(url, data=params, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            if data.get('error_code') in ['0', 0]:
+                logger.info(f"✅ 收藏成功: {article_id}")
+                return True
+            logger.error(f"❌ 收藏失败: {article_id} - {data.get('error_msg', '未知错误')}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ 收藏请求失败: {str(e)}")
+            return False
 
     def unfavorite_article_simple(self, article_id: str) -> bool:
-        """简单取消收藏文章"""
-        url = f"{self.BASE_URL}/user/favorite/ajax_delete_favorite"
-        params = {"article_id": article_id, "type": "article"}
-        logger.info(f"正在取消收藏文章 {article_id}...")
-        data = self._make_request('GET', url, params=params)
-        if data and str(data.get('error_code', '')) in ['0', None, '']:
-            logger.info(f"✅ 取消收藏成功: {article_id}")
-            return True
-        logger.error(f"❌ 取消收藏失败: {article_id} - {data}")
-        return False
+        """简单取消收藏文章（使用官方App接口）"""
+        url = f"{self.USER_API_URL}/favorites/delete"
+        token = self._get_token_from_cookie()
+        current_time = int(time.time() * 1000)
+        
+        params = {
+            'basic_v': '0',
+            'channel_id': '3',
+            'f': 'iphone',
+            'id': article_id,
+            'time': str(current_time),
+            'token': token,
+            'v': '11.1.35',
+            'weixin': '1',
+            'zhuanzai_ab': 'b'
+        }
+        params['sign'] = calculate_sign_from_params(params)
+        
+        headers = self.session.headers.copy()
+        headers.update({
+            'User-Agent': self.user_agent,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'request_key': str(int(time.time() * 1000000000))[:18],
+            'Content-Encoding': 'gzip',
+            'Accept-Language': 'zh-Hans-CN;q=1'
+        })
+
+        logger.info(f"正在使用官方API取消收藏文章 {article_id}...")
+        try:
+            response = self.session.post(url, data=params, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            if data.get('error_code') in ['0', 0]:
+                logger.info(f"✅ 取消收藏成功: {article_id}")
+                return True
+            logger.error(f"❌ 取消收藏失败: {article_id} - {data.get('error_msg', '未知错误')}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ 取消收藏请求失败: {str(e)}")
+            return False
 
 if __name__ == '__main__':
     api = SmzdmAPI("z_df=dz7a0RhUmbvWKo4vzEq%2BnqPhE2bgPIZs6idZXnQ7fLSKp52DTEJ%2FtQ%3D%3D;z_df_md5=0;basic_v=0;device_s=7xbgt04V1fJNr5Xq6afo99CNcHiFU%2FeMoSYLiCs%2FR9jr0MrWbxyzEJ4daig9ftTSvD55KLkgUlg%3D;session_id=7xbgt04V1fJNr5Xq6afo99CNcHiFU%2FeMoSYLiCs%2FR9gFPqaGnl8E3Q%3D%3D.1760957718;partner_id=31241;partner_name=iweibo241;device_recfeed_setting=%7B%22homepage_sort_switch%22%3A%221%22%2C%22haojia_recfeed_switch%22%3A%221%22%2C%22other_recfeed_switch%22%3A%221%22%2C%22shequ_recfeed_switch%22%3A%221%22%7D;f=iphone;device_id=7xbgt04V1fJNr5Xq6afo99CNcHiFU%2FeMoSYLiCs%2FR9gFPqaGnl8E3Q%3D%3D;device_name=iPhone%2014%20Plus;apk_partner_name=appstore;active_time=1699085598;v=11.1.35;last_article_info=%7B%22article_id%22%3A%22160010675%22%2C%22article_channel_id%22%3A%222%22%7D;is_dark_mode=0;device_smzdm_version_code=167;device_system_version=26.0.1;sess=BC-1RkVC19l4AT3O%20P9xPOFcO3xhAwxdGKoVf0Ig1mDTp750xrJgvpa653OQMWAUCzj%2FIkvEqu1qZGNk9qf5Wx9u6gBRAQOLSGvabtjABeLegCnOi3PWhoUQpP2uw%3D%3D;device_push=notifications_are_disabled;client_id=d12bae4972f9934d727f0367d9b4df20.1728221391721;device_screen_type=iphone;onmac=0;network=1;smzdm_id=7126551750;font_size=normal;device_type=iPhone14%2C8;device_smzdm=iphone;",
