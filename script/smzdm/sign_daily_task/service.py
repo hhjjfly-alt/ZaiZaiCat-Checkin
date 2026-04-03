@@ -47,7 +47,12 @@ class SmzdmService:
 
         # 获取累计任务列表
         accumulate_list = activity_task.get('accumulate_list', {})
-        task_list_v2 = accumulate_list.get('task_list_v2', [])
+        
+        # 修复：防止服务器返回空列表 [] 导致 .get() 方法报错
+        if isinstance(accumulate_list, list):
+            task_list_v2 = []
+        else:
+            task_list_v2 = accumulate_list.get('task_list_v2', [])
 
         # 遍历每个模块的任务列表
         if task_list_v2:
